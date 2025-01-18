@@ -1,5 +1,5 @@
 # Calibre Automations Java
-Equivalient of calibre-automations in Python.
+Equivalent of calibre-automations in Python.
 
 Replaces the `readorder` tag with the values of the custom field.
 
@@ -19,5 +19,5 @@ Build the jar file in `build/libs` using:
 
 Execute the jar file using:
 ```bash
-java -jar build/libs/calibreUpdateReadorder-1.0-SNAPSHOT.jar --dry-run
+java -jar build/libs/calibreAutomationsJava-1.0-SNAPSHOT.jar --dry-run
 ```
