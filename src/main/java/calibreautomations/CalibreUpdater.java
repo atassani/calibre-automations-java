@@ -41,15 +41,14 @@ public class CalibreUpdater {
 
         boolean dryRun = cmd.hasOption("d");
 
-        // Process audiobooks if the -a flag is present or if no other flag is present
-
+        // If no specific flag is set, process everything
         boolean processReadOrder = cmd.hasOption("r") || cmd.hasOption("readOrder") || cmd.hasOption("read-order") || !cmd.hasOption("a") || !cmd.hasOption("audiobook");
         boolean processAudiobooks = cmd.hasOption("a") || !(cmd.hasOption("r") || cmd.hasOption("readOrder") || cmd.hasOption("read-order"));
 
         try (Connection conn = DriverManager.getConnection(DB_URL)) {
             String readOrderTable = getReadOrderTable(conn);
             if (processReadOrder && readOrderTable == null) {
-                System.out.println("Custom field 'readorder' not found in the Calibre database.");
+                System.out.println("ERROR: Custom field 'readorder' not found in the Calibre database.");
                 return;
             }
             List<Book> books = getBooks(conn, readOrderTable);
@@ -57,17 +56,18 @@ public class CalibreUpdater {
             for (Book book : books) {
                 // TODO I would like to test that processing audiobooks or readorder are called
                 // TODO Validate that there is only one format (or more than one?), Validate that there is one
+                // TODO Check if a finished book has a score
                 if (processAudiobooks) {
                     // TODO Consider dry-run for Audiobook
                     // TODO count updated books, and updated books for audiobook or for readorder
                     if (book.isAudioBookFromTags()) {
                         if (!book.getTitle().contains("(audiobook)")) {
-                            System.out.printf("Update audiobook title for book \"%s\" to ...%n", book.getTitle());
+                            System.out.printf("%-30s for \"%s\" to ...%n", "[add audiobook to title]", book.getTitle());
                         }
                     }
                     if (book.getTitle().contains("(audiobook)")) {
                         if (!book.isAudioBookFromTags()) {
-                            System.out.printf("Update not audiobook title for book \"%s\" to ...%n", book.getTitle());
+                            System.out.printf("%-30s for \"%s\" to ...%n", "[remove audiobook from title]", book.getTitle());
                         }
                     }
                 }
@@ -79,11 +79,12 @@ public class CalibreUpdater {
                             // TODO Update the database will require delete fields, as in the python code
                             //updateReadOrder(conn, book, readOrderFromCustomField, readOrderTable);
                         }
-                        System.out.printf("Update readorder for book \"%s\" from \"%s\" to \"%s\"%n", book.getTitle(), readOrderFromTags, readOrderFromCustomField);
+                        System.out.printf("%-30s for \"%s\" from \"%s\" to \"%s\"%n", "[update readorder]", book.getTitle(), readOrderFromTags, readOrderFromCustomField);
                     }
                 }
             }
-            System.out.printf("%d books updated%n", updatedBooks);
+            String updateMessage = dryRun ? "to update (dry-run)" : "updated";
+            System.out.printf("%d books %s%n", updatedBooks, updateMessage);
         } catch (SQLException e) {
             e.printStackTrace();
         }
