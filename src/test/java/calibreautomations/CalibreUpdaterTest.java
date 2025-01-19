@@ -3,6 +3,13 @@ package calibreautomations;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
+import java.sql.Connection;
+import java.sql.SQLException;
 
 class CalibreUpdaterTest {
 
@@ -30,5 +37,16 @@ class CalibreUpdaterTest {
         assertFalse(book.isAudioBookFromTags());
     }
 
+    @Test
+    void testMainWithAudiobookOption() throws SQLException {
+        Connection mockConnection = mock(Connection.class);
+        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection));
 
+        doNothing().when(mockUpdater).updateCalibre(any(Connection.class), anyBoolean(), anyBoolean(), anyBoolean());
+
+        String[] args = {"-a"};
+        mockUpdater.run(args);
+
+        verify(mockUpdater).updateCalibre(eq(mockConnection), anyBoolean(), eq(true), anyBoolean());
+    }
 }
