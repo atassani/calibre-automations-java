@@ -2,13 +2,18 @@ package calibreautomations;
 
 import com.google.gson.Gson;
 import org.apache.commons.cli.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.*;
 import java.util.List;
+import java.util.Properties;
 
 public class CalibreUpdater {
-    // TODO Use an external properties file
-    private static final String DB_URL = "jdbc:sqlite:/Users/toni.tassani/CalibreLibrary/metadata.db";
+    private static final Logger logger = LoggerFactory.getLogger(CalibreUpdater.class);
+    private static String DB_URL;
     private static final Gson gson = new Gson();
 
     private final Connection connection;
@@ -20,12 +25,49 @@ public class CalibreUpdater {
     }
 
     public static void main(String[] args) {
+        loadConfiguration();
         try (Connection conn = DriverManager.getConnection(DB_URL)) {
             CalibreUpdater calibreUpdater = new CalibreUpdater(conn);
             calibreUpdater.run(args);
         } catch (SQLException e) {
-            // TODO Use proper logging
-            e.printStackTrace();
+            logger.error("Database connection error", e);
+        }
+    }
+
+    private static void loadConfiguration() {
+        Properties properties = new Properties();
+        try (InputStream input = CalibreUpdater.class.getClassLoader().getResourceAsStream("config.properties")) {
+            if (input == null) {
+                logger.error("Sorry, unable to find config.properties");
+                return;
+            }
+            properties.load(input);
+            DB_URL = properties.getProperty("db.url");
+            String logLevel = properties.getProperty("log.level");
+            setLogLevel(logLevel);
+        } catch (IOException ex) {
+            logger.error("Error loading configuration", ex);
+        }
+    }
+
+    private static void setLogLevel(String logLevel) {
+        ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        switch (logLevel.toUpperCase()) {
+            case "DEBUG":
+                rootLogger.setLevel(ch.qos.logback.classic.Level.DEBUG);
+                break;
+            case "INFO":
+                rootLogger.setLevel(ch.qos.logback.classic.Level.INFO);
+                break;
+            case "WARN":
+                rootLogger.setLevel(ch.qos.logback.classic.Level.WARN);
+                break;
+            case "ERROR":
+                rootLogger.setLevel(ch.qos.logback.classic.Level.ERROR);
+                break;
+            default:
+                rootLogger.setLevel(ch.qos.logback.classic.Level.INFO);
+                break;
         }
     }
 
@@ -35,6 +77,7 @@ public class CalibreUpdater {
         try {
             options.parse(args);
         } catch (ParseException e) {
+            logger.error("Error parsing command line options", e);
             System.out.println(e.getMessage());
             System.out.println(options.help());
             return;
@@ -43,14 +86,12 @@ public class CalibreUpdater {
         try {
             updateCalibre(options);
         } catch (SQLException e) {
-            // TODO Use proper logging
-            e.printStackTrace();
+            logger.error("Error updating Calibre", e);
         } finally {
             try {
                 connection.close();
             } catch (SQLException e) {
-                // TODO Use proper logging
-                e.printStackTrace();
+                logger.error("Error closing database connection", e);
             }
         }
     }
