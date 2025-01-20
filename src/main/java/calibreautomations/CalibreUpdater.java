@@ -4,17 +4,19 @@ import com.google.gson.Gson;
 import org.apache.commons.cli.*;
 
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.List;
 
 public class CalibreUpdater {
+    // TODO Use an external properties file
     private static final String DB_URL = "jdbc:sqlite:/Users/toni.tassani/CalibreLibrary/metadata.db";
     private static final Gson gson = new Gson();
 
     private final Connection connection;
+    private final CalibreDB calibredb;
 
     public CalibreUpdater(Connection connection) {
         this.connection = connection;
+        this.calibredb = new CalibreDB(connection);
     }
 
     public static void main(String[] args) {
@@ -22,140 +24,128 @@ public class CalibreUpdater {
             CalibreUpdater calibreUpdater = new CalibreUpdater(conn);
             calibreUpdater.run(args);
         } catch (SQLException e) {
+            // TODO Use proper logging
             e.printStackTrace();
         }
     }
 
     public void run(String[] args) {
-        Options options = new Options();
+        AppOptions options = new AppOptions();
 
-        options.addOption("d", "dry-run", false, "Run the updater in dry-run mode");
-        options.addOption("a", "audiobook", false, "Process audiobooks");
-        options.addOption(Option.builder("r")
-                .longOpt("readorder")
-                .desc("Process read order")
-                .build());
-        options.addOption(Option.builder()
-                .longOpt("readOrder")
-                .desc("Process read order")
-                .build());
-        options.addOption(Option.builder()
-                .longOpt("read-order")
-                .desc("Process read order")
-                .build());
-
-        CommandLineParser parser = new DefaultParser();
-        CommandLine cmd;
         try {
-            cmd = parser.parse(options, args);
+            options.parse(args);
         } catch (ParseException e) {
             System.out.println(e.getMessage());
-            new HelpFormatter().printHelp("CalibreUpdater", options);
+            System.out.println(options.help());
             return;
         }
 
-        // If no specific flag is set, process everything
-        boolean processReadOrder = cmd.hasOption("r") || cmd.hasOption("readOrder") || cmd.hasOption("read-order") || !cmd.hasOption("a") || !cmd.hasOption("audiobook");
-        boolean processAudiobooks = cmd.hasOption("a") || !(cmd.hasOption("r") || cmd.hasOption("readOrder") || cmd.hasOption("read-order"));
-        boolean dryRun = cmd.hasOption("d");
-
         try {
-            updateCalibre(connection, processReadOrder, processAudiobooks, dryRun);
+            updateCalibre(options);
         } catch (SQLException e) {
+            // TODO Use proper logging
             e.printStackTrace();
         } finally {
             try {
                 connection.close();
             } catch (SQLException e) {
+                // TODO Use proper logging
                 e.printStackTrace();
             }
         }
     }
 
-    protected void updateCalibre(Connection conn, boolean processReadOrder, boolean processAudiobooks, boolean dryRun) throws SQLException {
-        String readOrderTable = getReadOrderTable(conn);
-        if (processReadOrder && readOrderTable == null) {
+    protected void updateCalibre(AppOptions options) throws SQLException {
+        String readOrderTable = calibredb.getReadOrderTable();
+        if (options.isReadorders() && readOrderTable == null) {
             System.out.println("ERROR: Custom field 'readorder' not found in the Calibre database.");
             return;
         }
-        List<Book> books = getBooks(conn, readOrderTable);
-        int updatedBooks = 0;
+        List<Book> books = calibredb.getBooks(readOrderTable);
+        int numItemsUpdated = 0;
+        int numAudiobooksUpdated = 0;
+        int numReadordersUpdated = 0;
+        boolean audiobookUpdated = false;
+        boolean readorderUpdated = false;
         for (Book book : books) {
-            // TODO I would like to test that processing audiobooks or readorder are called
             // TODO Validate that there is only one format (or more than one?), Validate that there is one
             // TODO Check if a finished book has a score
-            if (processAudiobooks) {
-                // TODO Consider dry-run for Audiobook
-                // TODO count updated books, and updated books for audiobook or for readorder
-                if (book.isAudioBookFromTags()) {
-                    if (!book.getTitle().contains("(audiobook)")) {
-                        System.out.printf("%-30s for \"%s\" to ...%n", "[add audiobook to title]", book.getTitle());
-                    }
-                }
-                if (book.getTitle().contains("(audiobook)")) {
-                    if (!book.isAudioBookFromTags()) {
-                        System.out.printf("%-30s for \"%s\" to ...%n", "[remove audiobook from title]", book.getTitle());
-                    }
-                }
+            if (options.isAudiobooks()) {
+                audiobookUpdated = processAudiobook(options.isDryRun(), book);
             }
-            if (processReadOrder) {
-                String readOrderFromTags = book.getReadOrderFromTags();
-                String readOrderFromCustomField = book.getReadOrderFromCustomField();
-                if (!readOrderFromTags.equals(readOrderFromCustomField)) {
-                    if (!dryRun) {
-                        // TODO Update the database will require delete fields, as in the python code
-                        //updateReadOrder(conn, book, readOrderFromCustomField, readOrderTable);
-                    }
-                    System.out.printf("%-30s for \"%s\" from \"%s\" to \"%s\"%n", "[update readorder]", book.getTitle(), readOrderFromTags, readOrderFromCustomField);
-                }
+            if (options.isReadorders()) {
+                readorderUpdated = processReadOrder(options.isDryRun(), book);
             }
+            numAudiobooksUpdated += audiobookUpdated ? 1 : 0;
+            numReadordersUpdated += readorderUpdated ? 1 : 0;
+            numItemsUpdated += audiobookUpdated || readorderUpdated ? 1 : 0;
         }
-        String updateMessage = dryRun ? "to update (dry-run)" : "updated";
-        System.out.printf("%d books %s%n", updatedBooks, updateMessage);
+        String updateMessage = options.isDryRun() ? "to update (dry-run)" : "updated";
+        System.out.printf("%d items %s (%d audiobook changes, %d readorder changes)%n", numItemsUpdated, updateMessage, numAudiobooksUpdated, numReadordersUpdated);
     }
 
-    private String getReadOrderTable(Connection conn) throws SQLException {
-        String query = "SELECT id FROM custom_columns WHERE label = 'readorder'";
-        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
-            if (rs.next()) {
-                return "custom_column_" + rs.getInt("id");
+    private boolean processAudiobook(boolean dryRun, Book book) {
+        // TODO Consider dry-run for Audiobook
+        // TODO count updated books, and updated books for audiobook or for readorder
+        boolean itemUpdated = false;
+        if (book.isAudioBookFromTags()) {
+            if (!book.getTitle().contains("(audiobook)")) {
+                System.out.printf("%-30s for \"%s\" to ...%n", "[add audiobook to title]", book.getTitle());
+                itemUpdated = true;
             }
         }
-        return null;
-    }
-
-    private List<Book> getBooks(Connection conn, String readOrderTable) throws SQLException {
-        List<Book> books = new ArrayList<>();
-        // language=SQLite
-        String query = String.format("""
-                SELECT b.id, b.title, c.value AS readorder,
-                       (SELECT GROUP_CONCAT(t.name, ', ')
-                        FROM books_tags_link bt
-                        JOIN tags t ON bt.tag = t.id
-                        WHERE bt.book = b.id) AS tags
-                FROM books b
-                LEFT JOIN %s c ON b.id = c.book
-                ORDER BY title
-                """, readOrderTable);
-        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                String title = rs.getString("title");
-                String tags = rs.getString("tags");
-                String readOrder = rs.getString("readorder");
-                books.add(new Book(id, title, tags, readOrder));
+        if (book.getTitle().contains("(audiobook)")) {
+            if (!book.isAudioBookFromTags()) {
+                System.out.printf("%-30s for \"%s\" to ...%n", "[remove audiobook from title]", book.getTitle());
+                itemUpdated = true;
             }
         }
-        return books;
+        return itemUpdated;
     }
 
-    private void updateReadOrder(Connection conn, Book book, String newOrder, String readOrderTable) throws SQLException {
-        // language=SQLite
-        String updateQuery = String.format("UPDATE %s SET value = ? WHERE book = ?", readOrderTable);
-        try (PreparedStatement pstmt = conn.prepareStatement(updateQuery)) {
-            pstmt.setString(1, newOrder);
-            pstmt.setInt(2, book.getId());
-            pstmt.executeUpdate();
+
+    private boolean processReadOrder(boolean dryRun, Book book) {
+        String readOrderFromTags = book.getFirstReadOrderFromTags();
+        String readOrderFromCustomField = book.getReadOrderFromCustomField();
+        boolean itemUpdated = false;
+        // Case 1: More than one readorder tag, we keep the first one
+        if (book.getNumReadOrdersFromTags() > 1) {
+            System.out.printf("%-30s for \"%s\" to ...%n", "[remove extra readorder tags]", book.getTitle());
+            // TODO Implement book.removeExtraReadOrderTags();
+            //book.removeExtraReadOrderTags();
+            itemUpdated = true;
         }
+        // Case 2: No readorder tag but custom field exists, we add the tag
+        if (book.getNumReadOrdersFromTags() == 0 && !readOrderFromCustomField.equals("no-readorder")) {
+            System.out.printf("%-30s for \"%s\" to ...%n", "[add readorder tag]", book.getTitle());
+            // TODO Implement book.addReadOrderTag(readOrderFromCustomField);
+            //book.addReadOrderTag(readOrderFromCustomField);
+            itemUpdated = true;
+        }
+        // Case 3: Mismatch between tag and custom field, custom field wins
+        else if (!readOrderFromTags.equals("no-readorder") && !readOrderFromCustomField.equals("no-readorder") && !readOrderFromTags.equals(readOrderFromCustomField)) {
+            System.out.printf("%-30s for \"%s\" from \"%s\" to \"%s\"%n", "[update readorder]", book.getTitle(), readOrderFromTags, readOrderFromCustomField);
+            // TODO Update readorder tag to match custom field
+            //book.updateReadOrderTag(readOrderFromCustomField);
+            itemUpdated = true;
+        }
+        // Case 4: Delete custom field if value is 0.0
+        if (readOrderFromCustomField.equals("0.0")) {
+            System.out.printf("%-30s for \"%s\" to ...%n", "[delete readorder]", book.getTitle());
+            // TODO Implement book.deleteReadOrderCustomField();
+            //calibredb.deleteReadOrderCustomField();
+            itemUpdated = true;
+        }
+        // Case 5: Delete readorder tag if custom field is empty
+        // Skip the update if there are no changes to the tags
+        if (!readOrderFromTags.equals(readOrderFromCustomField)) {
+            if (!dryRun) {
+                // TODO Update the database will require delete fields, as in the python code
+                //updateReadOrder(conn, book, readOrderFromCustomField, readOrderTable);
+            }
+            System.out.printf("%-30s for \"%s\" from \"%s\" to \"%s\"%n", "[update readorder]", book.getTitle(), readOrderFromTags, readOrderFromCustomField);
+            itemUpdated = true;
+        }
+        return itemUpdated;
     }
 }
