@@ -43,31 +43,8 @@ public class CalibreUpdater {
             }
             properties.load(input);
             DB_URL = properties.getProperty("db.url");
-            String logLevel = properties.getProperty("log.level");
-            setLogLevel(logLevel);
         } catch (IOException ex) {
             logger.error("Error loading configuration", ex);
-        }
-    }
-
-    private static void setLogLevel(String logLevel) {
-        ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-        switch (logLevel.toUpperCase()) {
-            case "DEBUG":
-                rootLogger.setLevel(ch.qos.logback.classic.Level.DEBUG);
-                break;
-            case "INFO":
-                rootLogger.setLevel(ch.qos.logback.classic.Level.INFO);
-                break;
-            case "WARN":
-                rootLogger.setLevel(ch.qos.logback.classic.Level.WARN);
-                break;
-            case "ERROR":
-                rootLogger.setLevel(ch.qos.logback.classic.Level.ERROR);
-                break;
-            default:
-                rootLogger.setLevel(ch.qos.logback.classic.Level.INFO);
-                break;
         }
     }
 
@@ -106,9 +83,9 @@ public class CalibreUpdater {
         int numItemsUpdated = 0;
         int numAudiobooksUpdated = 0;
         int numReadordersUpdated = 0;
-        boolean audiobookUpdated = false;
-        boolean readorderUpdated = false;
         for (Book book : books) {
+            boolean audiobookUpdated = false;
+            boolean readorderUpdated = false;
             // TODO Validate that there is only one format (or more than one?), Validate that there is one
             // TODO Check if a finished book has a score
             if (options.isAudiobooks()) {
