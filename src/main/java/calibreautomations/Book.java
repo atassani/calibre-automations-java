@@ -3,6 +3,7 @@ package calibreautomations;
 import java.util.Arrays;
 
 public class Book {
+    public static final String NO_READORDER = "no-readorder";
     private final int id;
     private final String title;
     private final String tags;
@@ -27,16 +28,13 @@ public class Book {
         return tags;
     }
 
-    public String getFirstReadOrderFromTags() {
-        return tags != null && tags.contains("readorder:") ? tags.split("readorder:")[1].split(",")[0] : "no-readorder";
-    }
 
     public int getNumReadOrdersFromTags() {
         return tags == null || !tags.contains("readorder:") ? 0 : (int) Arrays.stream(tags.split(",")).filter(s -> s.trim().startsWith("readorder:")).count();
     }
 
     public String getReadOrderFromCustomField() {
-        return readOrder != null ? readOrder : "no-readorder";
+        return readOrder != null ? readOrder : NO_READORDER;
     }
 
     public boolean isAudioBookFromTags() {

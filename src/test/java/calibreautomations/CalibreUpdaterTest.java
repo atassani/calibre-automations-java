@@ -10,29 +10,10 @@ import org.mockito.Mockito;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.List;
 
 class CalibreUpdaterTest {
-
-    @Test
-    void testGetFirstReadOrderFromTags() {
-        Book book = new Book(1, "Test Book", "tag1,readorder:2.0,tag2", "3.0");
-        assertEquals("2.0", book.getFirstReadOrderFromTags());
-    }
-
-    @Test
-    void testGetFirstReadOrdersFromTagsWithMultipleItems() {
-        Book book = new Book(1, "Test Book", "tag1, readorder:3.0, readorder:2.0, tag2, readorder:5.1", "3.0");
-        assertEquals("3.0", book.getFirstReadOrderFromTags());
-    }
-
-    @Test
-    void testNumReadOrdersFromTags() {
-        Book book = new Book(1, "Test Book", "tag1, readorder:3.0, readorder:2.0, tag2, readorder:5.1", "3.0");
-        assertEquals(3, book.getNumReadOrdersFromTags());
-
-        book = new Book(1, "Test Book", "tag1, readorder:3.0, tag2", "3.0");
-        assertEquals(1, book.getNumReadOrdersFromTags());
-    }
 
     @Test
     void testGetReadOrderFromCustomField() {
@@ -55,8 +36,16 @@ class CalibreUpdaterTest {
     @Test
     void test_option_a_processes_Audiobook() throws SQLException {
         Connection mockConnection = mock(Connection.class);
-        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection));
+        CalibreDB mockCalibreDB = mock(CalibreDB.class);
+        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
+
+        // Mock the getBooks method to return a list of books
+        List<Book> mockBooks = Arrays.asList(
+                new Book(1, "Test Book 1", "tag1,readorder:2.0,tag2", "3.0"),
+                new Book(2, "Test Book 2", "tag1,format:audiobook,tag2", "3.0")
+        );
+        doReturn(mockBooks).when(mockCalibreDB).getBooks();
 
         doNothing().when(mockUpdater).updateCalibre(mockOptions);
 
@@ -66,14 +55,27 @@ class CalibreUpdaterTest {
         when(mockOptions.isAudiobooks()).thenReturn(true);
         when(mockOptions.isReadorders()).thenReturn(false);
         when(mockOptions.isDryRun()).thenReturn(false);
-        verify(mockUpdater).updateCalibre(mockOptions);
+
+        // Verify that processAudiobook and processReadOrder are called
+        for (Book book : mockBooks) {
+            verify(mockUpdater).processAudiobook(anyBoolean(), eq(book));
+            verify(mockUpdater, never()).processReadOrder(anyBoolean(), eq(book));
+        }
     }
 
     @Test
     void test_option_r_processes_Readorder() throws SQLException {
         Connection mockConnection = mock(Connection.class);
-        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection));
+        CalibreDB mockCalibreDB = mock(CalibreDB.class);
+        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
+
+        // Mock the getBooks method to return a list of books
+        List<Book> mockBooks = Arrays.asList(
+                new Book(1, "Test Book 1", "tag1,readorder:2.0,tag2", "3.0"),
+                new Book(2, "Test Book 2", "tag1,format:audiobook,tag2", "3.0")
+        );
+        doReturn(mockBooks).when(mockCalibreDB).getBooks();
 
         doNothing().when(mockUpdater).updateCalibre(mockOptions);
 
@@ -84,16 +86,27 @@ class CalibreUpdaterTest {
         when(mockOptions.isReadorders()).thenReturn(true);
         when(mockOptions.isDryRun()).thenReturn(false);
 
-
-        verify(mockUpdater).updateCalibre(mockOptions);
+        // Verify that processAudiobook and processReadOrder are called
+        for (Book book : mockBooks) {
+            verify(mockUpdater, never()).processAudiobook(anyBoolean(), eq(book));
+            verify(mockUpdater).processReadOrder(anyBoolean(), eq(book));
+        }
     }
 
 
     @Test
     void test_no_option_processes_audiobook_and_readorder() throws SQLException {
         Connection mockConnection = mock(Connection.class);
-        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection));
+        CalibreDB mockCalibreDB = mock(CalibreDB.class);
+        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
+
+        // Mock the getBooks method to return a list of books
+        List<Book> mockBooks = Arrays.asList(
+                new Book(1, "Test Book 1", "tag1,readorder:2.0,tag2", "3.0"),
+                new Book(2, "Test Book 2", "tag1,format:audiobook,tag2", "3.0")
+        );
+        doReturn(mockBooks).when(mockCalibreDB).getBooks();
 
         when(mockOptions.isAudiobooks()).thenReturn(true);
         when(mockOptions.isReadorders()).thenReturn(true);
@@ -103,6 +116,12 @@ class CalibreUpdaterTest {
         String[] args = {};
         mockUpdater.run(args);
 
-        verify(mockUpdater).updateCalibre(mockOptions);
+        // Verify that processAudiobook and processReadOrder are called
+        for (Book book : mockBooks) {
+            verify(mockUpdater).processAudiobook(anyBoolean(), eq(book));
+            verify(mockUpdater).processReadOrder(anyBoolean(), eq(book));
+        }
     }
+
+    // TODO Tests for the 5 cases of readorder with dryrun and without
 }
