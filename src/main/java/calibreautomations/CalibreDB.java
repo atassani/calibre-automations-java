@@ -7,7 +7,7 @@ import java.util.List;
 public class CalibreDB {
 
     private final Connection connection;
-    private String readOrderTable;
+    private final String readOrderTable;
 
     public CalibreDB(Connection connection) throws SQLException {
         this.connection = connection;
@@ -34,7 +34,6 @@ public class CalibreDB {
                 LEFT JOIN %s c ON b.id = c.book
                 ORDER BY title
                 """, this.readOrderTable);
-        //noinspection SqlSourceToSinkFlow
         try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
             while (rs.next()) {
                 int id = rs.getInt("id");
@@ -45,16 +44,6 @@ public class CalibreDB {
             }
         }
         return books;
-    }
-
-    private void updateReadOrder(Book book, String newOrder) throws SQLException {
-        // language=SQLite
-        String updateQuery = String.format("UPDATE %s SET value = ? WHERE book = ?", this.readOrderTable);
-        try (PreparedStatement pstmt = connection.prepareStatement(updateQuery)) {
-            pstmt.setString(1, newOrder);
-            pstmt.setInt(2, book.getId());
-            pstmt.executeUpdate();
-        }
     }
 
     public void deleteReadOrderCustomField(int bookId) throws SQLException {
@@ -112,5 +101,14 @@ public class CalibreDB {
             }
             insertBookTag(book.getId(), tagId);
         }
+    }
+
+    public void updateBookTitle(int bookId, String title) throws SQLException{
+        // language=SQLite
+        String updateQuery = "UPDATE books SET title = ? WHERE id = ?";
+        PreparedStatement pstmt = connection.prepareStatement(updateQuery);
+        pstmt.setString(1, title);
+        pstmt.setInt(2, bookId);
+        pstmt.executeUpdate();
     }
 }

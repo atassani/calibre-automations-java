@@ -6,12 +6,12 @@ import org.mockito.Mockito;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
+@SuppressWarnings("unchecked")
 class ProcessReadOrderTest {
 
     @Test
@@ -22,7 +22,7 @@ class ProcessReadOrderTest {
         AppOptions mockOptions = mock(AppOptions.class);
 
         // Mock the getBooks method to return a list of books with multiple readorder tags
-        List<Book> mockBooks = Arrays.asList(
+        List<Book> mockBooks = List.of(
                 new Book(1, "Test Book 1", "tag1,readorder:2.0,readorder:3.0,tag2", "2.0")
         );
         doReturn(mockBooks).when(mockCalibreDB).getBooks();
@@ -36,7 +36,7 @@ class ProcessReadOrderTest {
         mockUpdater.run(args);
 
         // Capture the arguments passed to replaceBookTags
-        ArgumentCaptor<List> tagsCaptor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List<String>> tagsCaptor = ArgumentCaptor.forClass(List.class);
         verify(mockCalibreDB).replaceBookTags(eq(mockBooks.get(0)), tagsCaptor.capture());
 
         // Verify that only the first readorder tag is present
@@ -53,7 +53,7 @@ class ProcessReadOrderTest {
         AppOptions mockOptions = mock(AppOptions.class);
 
         // Mock the getBooks method to return a list of books with no readorder tag
-        List<Book> mockBooks = Arrays.asList(
+        List<Book> mockBooks = List.of(
                 new Book(1, "Test Book 1", "tag1,tag2", "2.0")
         );
         doReturn(mockBooks).when(mockCalibreDB).getBooks();
@@ -67,7 +67,7 @@ class ProcessReadOrderTest {
         mockUpdater.run(args);
 
         // Capture the arguments passed to replaceBookTags
-        ArgumentCaptor<List> tagsCaptor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List<String>> tagsCaptor = ArgumentCaptor.forClass(List.class);
         verify(mockCalibreDB).replaceBookTags(eq(mockBooks.get(0)), tagsCaptor.capture());
 
         // Verify that the readorder tag is added
@@ -83,7 +83,7 @@ class ProcessReadOrderTest {
         AppOptions mockOptions = mock(AppOptions.class);
 
         // Mock the getBooks method to return a list of books with different readorder tag and custom field
-        List<Book> mockBooks = Arrays.asList(
+        List<Book> mockBooks = List.of(
                 new Book(1, "Test Book 1", "tag1,readorder:2.0,tag2", "3.0")
         );
         doReturn(mockBooks).when(mockCalibreDB).getBooks();
@@ -97,7 +97,7 @@ class ProcessReadOrderTest {
         mockUpdater.run(args);
 
         // Capture the arguments passed to replaceBookTags
-        ArgumentCaptor<List> tagsCaptor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List<String>> tagsCaptor = ArgumentCaptor.forClass(List.class);
         verify(mockCalibreDB).replaceBookTags(eq(mockBooks.get(0)), tagsCaptor.capture());
 
         // Verify that the readorder tag is updated to match the custom field value
@@ -114,7 +114,7 @@ class ProcessReadOrderTest {
         AppOptions mockOptions = mock(AppOptions.class);
 
         // Mock the getBooks method to return a list of books with same readorder tag and custom field
-        List<Book> mockBooks = Arrays.asList(
+        List<Book> mockBooks = List.of(
                 new Book(1, "Test Book 1", "tag1,readorder:2.0,tag2", "2.0")
         );
         doReturn(mockBooks).when(mockCalibreDB).getBooks();
@@ -139,7 +139,7 @@ class ProcessReadOrderTest {
         AppOptions mockOptions = mock(AppOptions.class);
 
         // Mock the getBooks method to return a list of books with readorder tag 0.0
-        List<Book> mockBooks = Arrays.asList(
+        List<Book> mockBooks = List.of(
                 new Book(1, "Test Book 1", "tag1,readorder:2.0,tag2", "0.0")
         );
         doReturn(mockBooks).when(mockCalibreDB).getBooks();
@@ -153,7 +153,7 @@ class ProcessReadOrderTest {
         mockUpdater.run(args);
 
         // Capture the arguments passed to replaceBookTags
-        ArgumentCaptor<List> tagsCaptor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List<String>> tagsCaptor = ArgumentCaptor.forClass(List.class);
         verify(mockCalibreDB).replaceBookTags(eq(mockBooks.get(0)), tagsCaptor.capture());
 
         // Verify that calibredb.deleteReadOrderCustomField is called
@@ -172,7 +172,7 @@ class ProcessReadOrderTest {
         AppOptions mockOptions = mock(AppOptions.class);
 
         // Mock the getBooks method to return a list of books with readorder tag 0.0
-        List<Book> mockBooks = Arrays.asList(
+        List<Book> mockBooks = List.of(
                 new Book(1, "Test Book 1", "tag1,readorder:2.0,tag2", null)
         );
         doReturn(mockBooks).when(mockCalibreDB).getBooks();
@@ -186,7 +186,7 @@ class ProcessReadOrderTest {
         mockUpdater.run(args);
 
         // Capture the arguments passed to replaceBookTags
-        ArgumentCaptor<List> tagsCaptor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List<String>> tagsCaptor = ArgumentCaptor.forClass(List.class);
         verify(mockCalibreDB).replaceBookTags(eq(mockBooks.get(0)), tagsCaptor.capture());
 
         // Verify that the readorder tag is removed

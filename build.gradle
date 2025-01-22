@@ -35,6 +35,8 @@ test {
         showStandardStreams = true
         exceptionFormat = 'full'
     }
+    systemProperty 'test.mode', 'true'
+    systemProperty 'config.file', 'config-test'
 }
 
 jar {

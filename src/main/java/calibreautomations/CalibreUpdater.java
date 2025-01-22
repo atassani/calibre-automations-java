@@ -1,6 +1,5 @@
 package calibreautomations;
 
-import com.google.gson.Gson;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,15 +18,9 @@ import java.util.stream.Collectors;
 public class CalibreUpdater {
     public static final String NO_READORDER = "no-readorder";
     private static final Logger logger = LoggerFactory.getLogger(CalibreUpdater.class);
-    private static final Gson gson = new Gson();
     private static String DB_URL;
     private final Connection connection;
     private final CalibreDB calibredb;
-
-    public CalibreUpdater(Connection connection) throws SQLException {
-        this.connection = connection;
-        this.calibredb = new CalibreDB(connection);
-    }
 
     public CalibreUpdater(Connection connection, CalibreDB calibredb) {
         this.connection = connection;
@@ -37,7 +30,8 @@ public class CalibreUpdater {
     public static void main(String[] args) {
         loadConfiguration();
         try (Connection conn = DriverManager.getConnection(DB_URL)) {
-            CalibreUpdater calibreUpdater = new CalibreUpdater(conn);
+            CalibreDB calibreDB = new CalibreDB(conn);
+            CalibreUpdater calibreUpdater = new CalibreUpdater(conn, calibreDB);
             calibreUpdater.run(args);
         } catch (SQLException e) {
             logger.error("Database connection error", e);
@@ -46,7 +40,8 @@ public class CalibreUpdater {
 
     private static void loadConfiguration() {
         Properties properties = new Properties();
-        try (InputStream input = CalibreUpdater.class.getClassLoader().getResourceAsStream("config.properties")) {
+        String configFileName = System.getProperty("test.mode") != null ? "config-test.properties" : "config.properties";
+        try (InputStream input = CalibreUpdater.class.getClassLoader().getResourceAsStream(configFileName)) {
             if (input == null) {
                 logger.error("Sorry, unable to find config.properties");
                 return;
@@ -109,18 +104,37 @@ public class CalibreUpdater {
         System.out.printf("%d items %s (%d audiobook changes, %d readorder changes)%n", numItemsUpdated, updateMessage, numAudiobooksUpdated, numReadordersUpdated);
     }
 
-    boolean processAudiobook(boolean dryRun, Book book) {
+    boolean processAudiobook(boolean dryRun, Book book) throws SQLException {
         // TODO Consider dry-run for Audiobook
         boolean itemUpdated = false;
         if (book.isAudioBookFromTags()) {
             if (!book.getTitle().contains("(audiobook)")) {
                 System.out.printf("%-30s for \"%s\" to ...%n", "[add audiobook to title]", book.getTitle());
+                if (!dryRun) {
+                    String title = book.getTitle();
+                    if (title.contains(":")) {
+                        title = title.replaceFirst(":", " (audiobook):");
+                    } else {
+                        title = title + " (audiobook)";
+                    }
+                    calibredb.updateBookTitle(book.getId(), title);
+                }
                 itemUpdated = true;
             }
         }
+        // Custom field audiobook takes precedence over tags
+        else
         if (book.getTitle().contains("(audiobook)")) {
             if (!book.isAudioBookFromTags()) {
-                System.out.printf("%-30s for \"%s\" to ...%n", "[remove audiobook from title]", book.getTitle());
+                String title = book.getTitle().replaceAll("\\(audiobook\\)", "").trim();
+                if (title.contains(":")) {
+                    String[] titleParts = title.split(":");
+                    title = titleParts[0].trim() + ": " + titleParts[1].trim();
+                }
+                if (!dryRun) {
+                    calibredb.updateBookTitle(book.getId(), title);
+                }
+                System.out.printf("%-30s for \"%s\" to \"%s\"%n", "[remove audiobook from title]", book.getTitle(), title);
                 itemUpdated = true;
             }
         }
@@ -134,9 +148,9 @@ public class CalibreUpdater {
         List<String> readOrderTags = Arrays.stream(originalTags)
                 .filter(tag -> tag.trim().startsWith("readorder:"))
                 .map(tag -> tag.trim().replace("readorder:", ""))
-                .collect(Collectors.toList());
-        String readOrderFromTags = null;
-        if (readOrderTags.size() > 0) {
+                .toList();
+        String readOrderFromTags;
+        if (!readOrderTags.isEmpty()) {
             readOrderFromTags = "readorder:" + readOrderTags.get(0);
         } else {
             readOrderFromTags = NO_READORDER;
@@ -161,13 +175,11 @@ public class CalibreUpdater {
         else if (!NO_READORDER.equals(readOrderFromTags) && !NO_READORDER.equals(readOrderFromCustomField) &&
                  !readOrderFromTags.equals(readOrderFromCustomField)) {
             System.out.printf("%-30s for \"%s\" from \"%s\" to \"%s\"%n", "[update readorder]", book.getTitle(), readOrderFromTags, readOrderFromCustomField);
-            if (!readOrderFromTags.equals(readOrderFromCustomField)) {
-                // Upddate the tag to match the custom field value
-                tagsList = tagsList.stream()
-                        .filter(tag -> !tag.trim().startsWith("readorder:"))
-                        .collect(Collectors.toList());
-                tagsList.add("readorder:" + readOrderFromCustomField);
-            }
+            // Update the tag to match the custom field value
+            tagsList = tagsList.stream()
+                    .filter(tag -> !tag.trim().startsWith("readorder:"))
+                    .collect(Collectors.toList());
+            tagsList.add("readorder:" + readOrderFromCustomField);
             itemUpdated = true;
         }
         // Case 4: Delete custom field if value is 0.0
@@ -189,7 +201,7 @@ public class CalibreUpdater {
             itemUpdated = true;
         }
 
-        if (!dryRun && !Arrays.asList(originalTags).stream().sorted().toList().equals(tagsList.stream().sorted().toList())) {
+        if (!dryRun && !Arrays.stream(originalTags).sorted().toList().equals(tagsList.stream().sorted().toList())) {
             calibredb.replaceBookTags(book, tagsList);
         }
 

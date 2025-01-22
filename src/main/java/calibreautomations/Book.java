@@ -1,7 +1,5 @@
 package calibreautomations;
 
-import java.util.Arrays;
-
 public class Book {
     public static final String NO_READORDER = "no-readorder";
     private final int id;
@@ -26,11 +24,6 @@ public class Book {
 
     public String getTags() {
         return tags;
-    }
-
-
-    public int getNumReadOrdersFromTags() {
-        return tags == null || !tags.contains("readorder:") ? 0 : (int) Arrays.stream(tags.split(",")).filter(s -> s.trim().startsWith("readorder:")).count();
     }
 
     public String getReadOrderFromCustomField() {
