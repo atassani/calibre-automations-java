@@ -1,10 +1,8 @@
 package calibreautomations;
 
-import calibreautomations.persistence.CalibreDBJdbc;
+import calibreautomations.persistence.CalibreDBCli;
 import calibreautomations.persistence.DataAccessException;
 import org.junit.jupiter.api.Test;
-
-import java.sql.Connection;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
@@ -13,9 +11,8 @@ class ProcessAudiobookTest {
 
     @Test
     void testProcessAudiobook_AddsAudiobookToTitle_with_subtitle() throws DataAccessException {
-        Connection mockConnection = mock(Connection.class);
-        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
-        CalibreUpdater updater = new CalibreUpdater(mockConnection, mockCalibreDB);
+        CalibreDBCli mockCalibreDB = mock(CalibreDBCli.class);
+        CalibreUpdater updater = new CalibreUpdater(mockCalibreDB);
 
         Book book = new Book(1, "Test Book: the adventure", "tag1,format:audiobook,tag2", "3.0");
         boolean result = updater.processAudiobook(false, book);
@@ -24,12 +21,10 @@ class ProcessAudiobookTest {
         verify(mockCalibreDB).updateBookTitle(eq(1), eq("Test Book (audiobook): the adventure"));
     }
 
-
     @Test
     void testProcessAudiobook_AddsAudiobookToTitle_without_subtitle() throws DataAccessException {
-        Connection mockConnection = mock(Connection.class);
-        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
-        CalibreUpdater updater = new CalibreUpdater(mockConnection, mockCalibreDB);
+        CalibreDBCli mockCalibreDB = mock(CalibreDBCli.class);
+        CalibreUpdater updater = new CalibreUpdater(mockCalibreDB);
 
         Book book = new Book(1, "Test Book", "tag1,format:audiobook,tag2", "3.0");
         boolean result = updater.processAudiobook(false, book);
@@ -40,9 +35,8 @@ class ProcessAudiobookTest {
 
     @Test
     void testProcessAudiobook_RemovesAudiobookFromTitle_with_subtitle() throws DataAccessException {
-        Connection mockConnection = mock(Connection.class);
-        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
-        CalibreUpdater updater = new CalibreUpdater(mockConnection, mockCalibreDB);
+        CalibreDBCli mockCalibreDB = mock(CalibreDBCli.class);
+        CalibreUpdater updater = new CalibreUpdater(mockCalibreDB);
 
         Book book = new Book(1, "Test Book (audiobook): the adventure", "tag1,tag2", "3.0");
         boolean result = updater.processAudiobook(false, book);
@@ -53,9 +47,8 @@ class ProcessAudiobookTest {
 
     @Test
     void testProcessAudiobook_RemovesAudiobookFromTitle_without_subtitle() throws DataAccessException {
-        Connection mockConnection = mock(Connection.class);
-        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
-        CalibreUpdater updater = new CalibreUpdater(mockConnection, mockCalibreDB);
+        CalibreDBCli mockCalibreDB = mock(CalibreDBCli.class);
+        CalibreUpdater updater = new CalibreUpdater(mockCalibreDB);
 
         Book book = new Book(1, "Test Book (audiobook)", "tag1,tag2", "3.0");
         boolean result = updater.processAudiobook(false, book);

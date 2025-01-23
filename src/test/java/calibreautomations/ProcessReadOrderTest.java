@@ -1,12 +1,11 @@
 package calibreautomations;
 
-import calibreautomations.persistence.CalibreDBJdbc;
+import calibreautomations.persistence.CalibreDBCli;
 import calibreautomations.persistence.DataAccessException;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
-import java.sql.Connection;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -17,9 +16,8 @@ class ProcessReadOrderTest {
 
     @Test
     void test_more_than_one_readorder_gets_first_if_no_custom_field() throws DataAccessException {
-        Connection mockConnection = mock(Connection.class);
-        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
-        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
+        CalibreDBCli mockCalibreDB = mock(CalibreDBCli.class);
+        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
 
         // Mock the getBooks method to return a list of books with multiple readorder tags
@@ -33,7 +31,7 @@ class ProcessReadOrderTest {
 
         doNothing().when(mockUpdater).updateCalibre(mockOptions);
 
-        String[] args = { "-r"};
+        String[] args = {"-r"};
         mockUpdater.run(args);
 
         // Capture the arguments passed to replaceBookTags
@@ -48,9 +46,8 @@ class ProcessReadOrderTest {
 
     @Test
     void test_if_no_readorder_tag_and_custom_field_exists_adds_readorder_tag() throws DataAccessException {
-        Connection mockConnection = mock(Connection.class);
-        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
-        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
+        CalibreDBCli mockCalibreDB = mock(CalibreDBCli.class);
+        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
 
         // Mock the getBooks method to return a list of books with no readorder tag
@@ -64,7 +61,7 @@ class ProcessReadOrderTest {
 
         doNothing().when(mockUpdater).updateCalibre(mockOptions);
 
-        String[] args = { "-r"};
+        String[] args = {"-r"};
         mockUpdater.run(args);
 
         // Capture the arguments passed to replaceBookTags
@@ -78,9 +75,8 @@ class ProcessReadOrderTest {
 
     @Test
     void test_if_readorder_custom_field_different_from_tag_custom_field_wins() throws DataAccessException {
-        Connection mockConnection = mock(Connection.class);
-        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
-        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
+        CalibreDBCli mockCalibreDB = mock(CalibreDBCli.class);
+        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
 
         // Mock the getBooks method to return a list of books with different readorder tag and custom field
@@ -94,7 +90,7 @@ class ProcessReadOrderTest {
 
         doNothing().when(mockUpdater).updateCalibre(mockOptions);
 
-        String[] args = { "-r"};
+        String[] args = {"-r"};
         mockUpdater.run(args);
 
         // Capture the arguments passed to replaceBookTags
@@ -109,9 +105,8 @@ class ProcessReadOrderTest {
 
     @Test
     void test_if_readorder_custom_field_same_as_tag_no_update() throws DataAccessException {
-        Connection mockConnection = mock(Connection.class);
-        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
-        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
+        CalibreDBCli mockCalibreDB = mock(CalibreDBCli.class);
+        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
 
         // Mock the getBooks method to return a list of books with same readorder tag and custom field
@@ -125,7 +120,7 @@ class ProcessReadOrderTest {
 
         doNothing().when(mockUpdater).updateCalibre(mockOptions);
 
-        String[] args = { "-r"};
+        String[] args = {"-r"};
         mockUpdater.run(args);
 
         // Verify that replaceBookTags is not called
@@ -134,9 +129,8 @@ class ProcessReadOrderTest {
 
     @Test
     void test_if_custom_field_is_0_0_removes_tag() throws DataAccessException {
-        Connection mockConnection = mock(Connection.class);
-        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
-        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
+        CalibreDBCli mockCalibreDB = mock(CalibreDBCli.class);
+        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
 
         // Mock the getBooks method to return a list of books with readorder tag 0.0
@@ -150,7 +144,7 @@ class ProcessReadOrderTest {
 
         doNothing().when(mockUpdater).updateCalibre(mockOptions);
 
-        String[] args = { "-r"};
+        String[] args = {"-r"};
         mockUpdater.run(args);
 
         // Capture the arguments passed to replaceBookTags
@@ -167,9 +161,8 @@ class ProcessReadOrderTest {
 
     @Test
     void test_if_readorder_custom_field_is_empty_removes_the_tag() throws DataAccessException {
-        Connection mockConnection = mock(Connection.class);
-        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
-        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
+        CalibreDBCli mockCalibreDB = mock(CalibreDBCli.class);
+        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
 
         // Mock the getBooks method to return a list of books with readorder tag 0.0
@@ -183,7 +176,7 @@ class ProcessReadOrderTest {
 
         doNothing().when(mockUpdater).updateCalibre(mockOptions);
 
-        String[] args = { "-r"};
+        String[] args = {"-r"};
         mockUpdater.run(args);
 
         // Capture the arguments passed to replaceBookTags

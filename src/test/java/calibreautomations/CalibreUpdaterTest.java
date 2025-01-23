@@ -1,19 +1,15 @@
 package calibreautomations;
 
-import calibreautomations.persistence.CalibreDB;
-import calibreautomations.persistence.CalibreDBJdbc;
 import calibreautomations.persistence.CalibreDBCli;
 import calibreautomations.persistence.DataAccessException;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-
-import org.mockito.Mockito;
-
-import java.sql.Connection;
-import java.util.Arrays;
-import java.util.List;
 
 class CalibreUpdaterTest {
 
@@ -37,9 +33,8 @@ class CalibreUpdaterTest {
 
     @Test
     void test_option_a_processes_Audiobook() throws DataAccessException {
-        Connection mockConnection = mock(Connection.class);
-        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
-        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
+        CalibreDBCli mockCalibreDB = mock(CalibreDBCli.class);
+        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
 
         // Mock the getBooks method to return a list of books
@@ -67,9 +62,8 @@ class CalibreUpdaterTest {
 
     @Test
     void test_option_r_processes_Readorder() throws DataAccessException {
-        Connection mockConnection = mock(Connection.class);
-        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
-        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
+        CalibreDBCli mockCalibreDB = mock(CalibreDBCli.class);
+        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
 
         // Mock the getBooks method to return a list of books
@@ -95,12 +89,10 @@ class CalibreUpdaterTest {
         }
     }
 
-
     @Test
     void test_no_option_processes_audiobook_and_readorder() throws DataAccessException {
-        Connection mockConnection = mock(Connection.class);
-        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
-        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
+        CalibreDBCli mockCalibreDB = mock(CalibreDBCli.class);
+        CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
 
         // Mock the getBooks method to return a list of books

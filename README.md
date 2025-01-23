@@ -1,10 +1,8 @@
 # Calibre Automations Java
-Equivalent of calibre-automations in Python.
 
-Replaces the `readorder` tag with the values of the custom field.
+Replaces the `readorder` tag with the values of the custom field. The custom field takes precedence over the tag. If custom field is 0.0, it will be cleared.
 
-## TODO
-- [ ] Implement update and deletion of custom fields, like in Python.
+Updates the tile to reflect is an audiobook if contains the tag `format:audiobook`. "Title (audiobook): subtitle"
 
 ## Building and Running
 Build using:
@@ -12,12 +10,17 @@ Build using:
 ./gradlew build
 ```
 
-Build the jar file in `build/libs` using:
-```bash
-./gradlew shadowJar
-```
-
 Execute the jar file using:
 ```bash
-java -jar build/libs/calibreAutomationsJava-1.0-SNAPSHOT.jar --dry-run
+java -jar build/libs/calibreUpdater-1.0.jar --dry-run
+```
+
+```
+usage: CalibreUpdater
+ -a,--audiobook      Process audiobooks
+ -d,--dry-run        Run the updater in dry-run mode
+ -r,--readorder      Process read order
+    --read-order     Process read order
+    --readOrder      Process read order
+
 ```

@@ -1,7 +1,7 @@
 package calibreautomations;
 
 import calibreautomations.persistence.CalibreDB;
-import calibreautomations.persistence.CalibreDBJdbc;
+import calibreautomations.persistence.CalibreDBCli;
 import calibreautomations.persistence.DataAccessException;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
@@ -9,9 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,38 +18,33 @@ import java.util.stream.Collectors;
 public class CalibreUpdater {
     public static final String NO_READORDER = "no-readorder";
     private static final Logger logger = LoggerFactory.getLogger(CalibreUpdater.class);
-    private static String DB_URL;
-    private final Connection connection;
+    private static String CALIBRE_LIBRARY_PATH;
     private final CalibreDB calibredb;
 
-    public CalibreUpdater(Connection connection, CalibreDB calibredb) {
-        this.connection = connection;
+    public CalibreUpdater(CalibreDB calibredb) {
         this.calibredb = calibredb;
     }
 
     public static void main(String[] args) {
         loadConfiguration();
-        try (Connection conn = DriverManager.getConnection(DB_URL)) {
-            CalibreDB calibreDB = new CalibreDBJdbc(conn);
-            CalibreUpdater calibreUpdater = new CalibreUpdater(conn, calibreDB);
-            calibreUpdater.run(args);
-        } catch (SQLException e) {
-            logger.error("Database connection error", e);
-        }
+
+        CalibreDB calibreDB = new CalibreDBCli(CALIBRE_LIBRARY_PATH);
+        CalibreUpdater calibreUpdater = new CalibreUpdater(calibreDB);
+        calibreUpdater.run(args);
     }
 
     private static void loadConfiguration() {
         Properties properties = new Properties();
-        String configFileName = System.getProperty("test.mode") != null ? "config-test.properties" : "config.properties";
-        try (InputStream input = CalibreUpdater.class.getClassLoader().getResourceAsStream(configFileName)) {
+        try (InputStream input = CalibreUpdater.class.getClassLoader().getResourceAsStream("config.properties")) {
             if (input == null) {
-                logger.error("Sorry, unable to find config.properties");
+                System.err.println("Sorry, unable to find config.properties");
                 return;
             }
             properties.load(input);
-            DB_URL = properties.getProperty("db.url");
+            CALIBRE_LIBRARY_PATH = properties.getProperty("calibre.library.path");
         } catch (IOException ex) {
-            logger.error("Error loading configuration", ex);
+            logger.debug("Error loading configuration", ex);
+            System.err.println("Error loading configuration");
         }
     }
 
@@ -62,6 +54,7 @@ public class CalibreUpdater {
         try {
             options.parse(args);
         } catch (ParseException e) {
+            // Show instructions if there is an error parsing the command line arguments
             System.out.println(e.getMessage());
             System.out.println(options.help());
             return;
@@ -69,20 +62,14 @@ public class CalibreUpdater {
 
         try {
             updateCalibre(options);
-        } catch (IllegalStateException e) {
-            logger.error("ERROR: Custom field 'readorder' not found in the Calibre database.");
         } catch (DataAccessException e) {
-            logger.error("Error updating Calibre", e);
-        } finally {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                logger.error("Error closing database connection", e);
-            }
+            logger.debug("Error updating Calibre", e);
+            System.err.println(e.getMessage());
         }
     }
 
     protected void updateCalibre(AppOptions options) throws DataAccessException {
+        System.out.println("Updating Calibre library \"" + CALIBRE_LIBRARY_PATH + "\"\n");
         List<Book> books = calibredb.getBooks();
         int numItemsUpdated = 0;
         int numAudiobooksUpdated = 0;
@@ -124,8 +111,7 @@ public class CalibreUpdater {
             }
         }
         // Custom field audiobook takes precedence over tags
-        else
-        if (book.getTitle().contains("(audiobook)")) {
+        else if (book.getTitle().contains("(audiobook)")) {
             if (!book.isAudioBookFromTags()) {
                 String title = book.getTitle().replaceAll("\\(audiobook\\)", "").trim();
                 if (title.contains(":")) {

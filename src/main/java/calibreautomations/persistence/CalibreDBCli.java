@@ -12,13 +12,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class CalibreDBCli implements CalibreDB {
 
     private static final Logger logger = LoggerFactory.getLogger(CalibreDBCli.class);
 
-    private final String calibreLibraryPath = "/Users/toni.tassani/CalibreLibraryTest";
+    private final String calibreLibraryPath;
+
+    public CalibreDBCli(String calibreLibraryPath) {
+        this.calibreLibraryPath = calibreLibraryPath;
+    }
 
     @Override
     public List<Book> getBooks() throws DataAccessException {
@@ -45,7 +48,7 @@ public class CalibreDBCli implements CalibreDB {
                 books.add(new Book(id, title, tags, readOrder));
             }
         } catch (Exception e) {
-            throw new DataAccessException("Error retrieving books", e);
+            throw new DataAccessException("Error retrieving books.\n" + e.getMessage());
         }
         return books;
     }
@@ -64,11 +67,11 @@ public class CalibreDBCli implements CalibreDB {
     @Override
     public void replaceBookTags(int bookId, List<String> tagsList) throws DataAccessException {
         try {
-            String tags = tagsList.stream().collect(Collectors.joining(","));
+            String tags = String.join(",", tagsList);
             String[] command = {"calibredb", "set_metadata", String.valueOf(bookId), "--field", "tags:" + tags, "--library-path=" + calibreLibraryPath};
             executeCalibreCommand(command);
         } catch (Exception e) {
-            throw new DataAccessException("Error deleting readorder custom field", e);
+            throw new DataAccessException("Error replacing book tags", e);
         }
     }
 
@@ -95,14 +98,14 @@ public class CalibreDBCli implements CalibreDB {
         while ((line = standardReader.readLine()) != null) {
             standardOutput.append(line);
         }
-        logger.debug("Output for command: {} \n {}", String.join(" ", command), standardOutput.toString());
+        logger.debug("Output for command: {} \n {}", String.join(" ", command), standardOutput);
 
         while ((line = errorReader.readLine()) != null) {
             errorOutput.append(line);
         }
         int exitCode = process.waitFor();
         if (exitCode != 0) {
-            throw new DataAccessException("Error executing calibredb command: " + errorOutput.toString());
+            throw new DataAccessException(errorOutput.toString());
         }
 
         return standardOutput.toString();
