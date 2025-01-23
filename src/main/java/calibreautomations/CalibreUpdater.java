@@ -2,6 +2,7 @@ package calibreautomations;
 
 import calibreautomations.persistence.CalibreDB;
 import calibreautomations.persistence.CalibreDBJdbc;
+import calibreautomations.persistence.DataAccessException;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +71,7 @@ public class CalibreUpdater {
             updateCalibre(options);
         } catch (IllegalStateException e) {
             logger.error("ERROR: Custom field 'readorder' not found in the Calibre database.");
-        } catch (SQLException e) {
+        } catch (DataAccessException e) {
             logger.error("Error updating Calibre", e);
         } finally {
             try {
@@ -81,7 +82,7 @@ public class CalibreUpdater {
         }
     }
 
-    protected void updateCalibre(AppOptions options) throws SQLException {
+    protected void updateCalibre(AppOptions options) throws DataAccessException {
         List<Book> books = calibredb.getBooks();
         int numItemsUpdated = 0;
         int numAudiobooksUpdated = 0;
@@ -105,7 +106,7 @@ public class CalibreUpdater {
         System.out.printf("%d items %s (%d audiobook changes, %d readorder changes)%n", numItemsUpdated, updateMessage, numAudiobooksUpdated, numReadordersUpdated);
     }
 
-    boolean processAudiobook(boolean dryRun, Book book) throws SQLException {
+    boolean processAudiobook(boolean dryRun, Book book) throws DataAccessException {
         // TODO Consider dry-run for Audiobook
         boolean itemUpdated = false;
         if (book.isAudioBookFromTags()) {
@@ -142,7 +143,7 @@ public class CalibreUpdater {
         return itemUpdated;
     }
 
-    boolean processReadOrder(boolean dryRun, Book book) throws SQLException {
+    boolean processReadOrder(boolean dryRun, Book book) throws DataAccessException {
         String readOrderFromCustomField = book.getReadOrderFromCustomField();
         String[] originalTags = book.getTags().split(",");
         List<String> tagsList = new ArrayList<>(Arrays.asList(originalTags));

@@ -1,6 +1,7 @@
 package calibreautomations;
 
 import calibreautomations.persistence.CalibreDBJdbc;
+import calibreautomations.persistence.DataAccessException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -9,7 +10,6 @@ import static org.mockito.Mockito.*;
 import org.mockito.Mockito;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,7 +34,7 @@ class CalibreUpdaterTest {
     }
 
     @Test
-    void test_option_a_processes_Audiobook() throws SQLException {
+    void test_option_a_processes_Audiobook() throws DataAccessException {
         Connection mockConnection = mock(Connection.class);
         CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
@@ -64,7 +64,7 @@ class CalibreUpdaterTest {
     }
 
     @Test
-    void test_option_r_processes_Readorder() throws SQLException {
+    void test_option_r_processes_Readorder() throws DataAccessException {
         Connection mockConnection = mock(Connection.class);
         CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
@@ -95,7 +95,7 @@ class CalibreUpdaterTest {
 
 
     @Test
-    void test_no_option_processes_audiobook_and_readorder() throws SQLException {
+    void test_no_option_processes_audiobook_and_readorder() throws DataAccessException {
         Connection mockConnection = mock(Connection.class);
         CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));

@@ -1,12 +1,12 @@
 package calibreautomations;
 
 import calibreautomations.persistence.CalibreDBJdbc;
+import calibreautomations.persistence.DataAccessException;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -16,7 +16,7 @@ import static org.mockito.Mockito.*;
 class ProcessReadOrderTest {
 
     @Test
-    void test_more_than_one_readorder_gets_first_if_no_custom_field() throws SQLException {
+    void test_more_than_one_readorder_gets_first_if_no_custom_field() throws DataAccessException {
         Connection mockConnection = mock(Connection.class);
         CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
@@ -47,7 +47,7 @@ class ProcessReadOrderTest {
     }
 
     @Test
-    void test_if_no_readorder_tag_and_custom_field_exists_adds_readorder_tag() throws SQLException {
+    void test_if_no_readorder_tag_and_custom_field_exists_adds_readorder_tag() throws DataAccessException {
         Connection mockConnection = mock(Connection.class);
         CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
@@ -77,7 +77,7 @@ class ProcessReadOrderTest {
     }
 
     @Test
-    void test_if_readorder_custom_field_different_from_tag_custom_field_wins() throws SQLException {
+    void test_if_readorder_custom_field_different_from_tag_custom_field_wins() throws DataAccessException {
         Connection mockConnection = mock(Connection.class);
         CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
@@ -108,7 +108,7 @@ class ProcessReadOrderTest {
     }
 
     @Test
-    void test_if_readorder_custom_field_same_as_tag_no_update() throws SQLException {
+    void test_if_readorder_custom_field_same_as_tag_no_update() throws DataAccessException {
         Connection mockConnection = mock(Connection.class);
         CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
@@ -133,7 +133,7 @@ class ProcessReadOrderTest {
     }
 
     @Test
-    void test_if_custom_field_is_0_0_removes_tag() throws SQLException {
+    void test_if_custom_field_is_0_0_removes_tag() throws DataAccessException {
         Connection mockConnection = mock(Connection.class);
         CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
@@ -166,7 +166,7 @@ class ProcessReadOrderTest {
     }
 
     @Test
-    void test_if_readorder_custom_field_is_empty_removes_the_tag() throws SQLException {
+    void test_if_readorder_custom_field_is_empty_removes_the_tag() throws DataAccessException {
         Connection mockConnection = mock(Connection.class);
         CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));

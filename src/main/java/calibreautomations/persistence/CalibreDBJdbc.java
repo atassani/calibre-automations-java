@@ -24,7 +24,7 @@ public class CalibreDBJdbc implements CalibreDB {
     }
 
     @Override
-    public List<Book> getBooks() throws SQLException {
+    public List<Book> getBooks() throws DataAccessException {
         List<Book> books = new ArrayList<>();
         // language=SQLite
         String query = String.format("""
@@ -45,63 +45,87 @@ public class CalibreDBJdbc implements CalibreDB {
                 String readOrder = rs.getString("readorder");
                 books.add(new Book(id, title, tags, readOrder));
             }
+        } catch (SQLException e) {
+            throw new DataAccessException(e);
         }
         return books;
     }
 
     @Override
-    public void deleteReadOrderCustomField(int bookId) throws SQLException {
+    public void deleteReadOrderCustomField(int bookId) throws DataAccessException {
         // language=SQLite
         String deleteQuery = String.format("DELETE FROM %s WHERE book = ?", this.readOrderTable);
         try (PreparedStatement pstmt = connection.prepareStatement(deleteQuery)) {
             pstmt.setInt(1, bookId);
             pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException(e);
         }
     }
 
     @Override
-    public void deleteAllBookTags(int bookId) throws SQLException {
+    public void deleteAllBookTags(int bookId) throws DataAccessException {
         // language=SQLite
         String deleteQuery = "DELETE FROM books_tags_link WHERE book = ?";
-        PreparedStatement pstmt = connection.prepareStatement(deleteQuery);
-        pstmt.setInt(1, bookId);
-        pstmt.executeUpdate();
-    }
-
-    @Override
-    public Integer getTagIfExists(String tag) throws SQLException {
-        // language=SQLite
-        String query = "SELECT id FROM tags WHERE name = ?";
-        PreparedStatement pstmt = connection.prepareStatement(query);
-        pstmt.setString(1, tag);
-        try (ResultSet rs = pstmt.executeQuery()) {
-            return rs.next() ? rs.getInt("id") : null;
+        PreparedStatement pstmt = null;
+        try {
+            pstmt = connection.prepareStatement(deleteQuery);
+            pstmt.setInt(1, bookId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException(e);
         }
     }
 
     @Override
-    public Integer insertTag(String tag) throws SQLException {
+    public Integer getTagIfExists(String tag) throws DataAccessException {
+        // language=SQLite
+        String query = "SELECT id FROM tags WHERE name = ?";
+        PreparedStatement pstmt = null;
+        try {
+            pstmt = connection.prepareStatement(query);
+            pstmt.setString(1, tag);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next() ? rs.getInt("id") : null;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException(e);
+        }
+    }
+
+    @Override
+    public Integer insertTag(String tag) throws DataAccessException {
         // language=SQLite
         String insertQuery = "INSERT INTO tags (name) VALUES (?)";
-        PreparedStatement pstmt = connection.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS);
-        pstmt.setString(1, tag);
-        pstmt.executeUpdate();
-        ResultSet rs = pstmt.getGeneratedKeys();
-        return rs.next() ? rs.getInt(1) : null;
+        PreparedStatement pstmt = null;
+        try {
+            pstmt = connection.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS);
+            pstmt.setString(1, tag);
+            pstmt.executeUpdate();
+            ResultSet rs = pstmt.getGeneratedKeys();
+            return rs.next() ? rs.getInt(1) : null;
+        } catch (SQLException e) {
+            throw new DataAccessException(e);
+        }
     }
 
     @Override
-    public void insertBookTag(int bookId, int tagId) throws SQLException {
+    public void insertBookTag(int bookId, int tagId) throws DataAccessException {
         // language=SQLite
         String insertQuery = "INSERT INTO books_tags_link (book, tag) VALUES (?, ?)";
-        PreparedStatement pstmt = connection.prepareStatement(insertQuery);
-        pstmt.setInt(1, bookId);
-        pstmt.setInt(2, tagId);
-        pstmt.executeUpdate();
+        PreparedStatement pstmt = null;
+        try {
+            pstmt = connection.prepareStatement(insertQuery);
+            pstmt.setInt(1, bookId);
+            pstmt.setInt(2, tagId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException(e);
+        }
     }
 
     @Override
-    public void replaceBookTags(Book book, List<String> tagsList) throws SQLException {
+    public void replaceBookTags(Book book, List<String> tagsList) throws DataAccessException {
         deleteAllBookTags(book.getId());
         for (String tag: tagsList) {
             Integer tagId = getTagIfExists(tag);
@@ -113,12 +137,17 @@ public class CalibreDBJdbc implements CalibreDB {
     }
 
     @Override
-    public void updateBookTitle(int bookId, String title) throws SQLException{
+    public void updateBookTitle(int bookId, String title) throws DataAccessException{
         // language=SQLite
         String updateQuery = "UPDATE books SET title = ? WHERE id = ?";
-        PreparedStatement pstmt = connection.prepareStatement(updateQuery);
-        pstmt.setString(1, title);
-        pstmt.setInt(2, bookId);
-        pstmt.executeUpdate();
+        PreparedStatement pstmt = null;
+        try {
+            pstmt = connection.prepareStatement(updateQuery);
+            pstmt.setString(1, title);
+            pstmt.setInt(2, bookId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataAccessException(e);
+        }
     }
 }
