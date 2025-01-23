@@ -2,7 +2,7 @@ package calibreautomations;
 
 import calibreautomations.persistence.CalibreDB;
 import calibreautomations.persistence.CalibreDBJdbc;
-import calibreautomations.persistence.CalibreDBcli;
+import calibreautomations.persistence.CalibreDBCli;
 import calibreautomations.persistence.DataAccessException;
 import org.junit.jupiter.api.Test;
 
@@ -16,15 +16,6 @@ import java.util.Arrays;
 import java.util.List;
 
 class CalibreUpdaterTest {
-
-    @Test
-    void testCli() throws DataAccessException {
-        CalibreDB calibreDBcli = new CalibreDBcli();
-        List<Book> books = calibreDBcli.getBooks();
-        for (Book book : books) {
-            System.out.println(book);
-        }
-    }
 
     @Test
     void testGetReadOrderFromCustomField() {

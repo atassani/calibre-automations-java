@@ -38,7 +38,7 @@ class ProcessReadOrderTest {
 
         // Capture the arguments passed to replaceBookTags
         ArgumentCaptor<List<String>> tagsCaptor = ArgumentCaptor.forClass(List.class);
-        verify(mockCalibreDB).replaceBookTags(eq(mockBooks.get(0)), tagsCaptor.capture());
+        verify(mockCalibreDB).replaceBookTags(eq(1), tagsCaptor.capture());
 
         // Verify that only the first readorder tag is present
         List<String> capturedTags = tagsCaptor.getValue();
@@ -69,7 +69,7 @@ class ProcessReadOrderTest {
 
         // Capture the arguments passed to replaceBookTags
         ArgumentCaptor<List<String>> tagsCaptor = ArgumentCaptor.forClass(List.class);
-        verify(mockCalibreDB).replaceBookTags(eq(mockBooks.get(0)), tagsCaptor.capture());
+        verify(mockCalibreDB).replaceBookTags(eq(1), tagsCaptor.capture());
 
         // Verify that the readorder tag is added
         List<String> capturedTags = tagsCaptor.getValue();
@@ -99,7 +99,7 @@ class ProcessReadOrderTest {
 
         // Capture the arguments passed to replaceBookTags
         ArgumentCaptor<List<String>> tagsCaptor = ArgumentCaptor.forClass(List.class);
-        verify(mockCalibreDB).replaceBookTags(eq(mockBooks.get(0)), tagsCaptor.capture());
+        verify(mockCalibreDB).replaceBookTags(eq(1), tagsCaptor.capture());
 
         // Verify that the readorder tag is updated to match the custom field value
         List<String> capturedTags = tagsCaptor.getValue();
@@ -129,7 +129,7 @@ class ProcessReadOrderTest {
         mockUpdater.run(args);
 
         // Verify that replaceBookTags is not called
-        verify(mockCalibreDB, never()).replaceBookTags(any(), any());
+        verify(mockCalibreDB, never()).replaceBookTags(anyInt(), any());
     }
 
     @Test
@@ -155,7 +155,7 @@ class ProcessReadOrderTest {
 
         // Capture the arguments passed to replaceBookTags
         ArgumentCaptor<List<String>> tagsCaptor = ArgumentCaptor.forClass(List.class);
-        verify(mockCalibreDB).replaceBookTags(eq(mockBooks.get(0)), tagsCaptor.capture());
+        verify(mockCalibreDB).replaceBookTags(eq(1), tagsCaptor.capture());
 
         // Verify that calibredb.deleteReadOrderCustomField is called
         verify(mockCalibreDB).deleteReadOrderCustomField(eq(1));
@@ -188,7 +188,7 @@ class ProcessReadOrderTest {
 
         // Capture the arguments passed to replaceBookTags
         ArgumentCaptor<List<String>> tagsCaptor = ArgumentCaptor.forClass(List.class);
-        verify(mockCalibreDB).replaceBookTags(eq(mockBooks.get(0)), tagsCaptor.capture());
+        verify(mockCalibreDB).replaceBookTags(eq(1), tagsCaptor.capture());
 
         // Verify that the readorder tag is removed
         List<String> capturedTags = tagsCaptor.getValue();

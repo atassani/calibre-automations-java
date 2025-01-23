@@ -9,15 +9,7 @@ public interface CalibreDB {
 
     void deleteReadOrderCustomField(int bookId) throws DataAccessException;
 
-    void deleteAllBookTags(int bookId) throws DataAccessException;
-
-    Integer getTagIfExists(String tag) throws DataAccessException;
-
-    Integer insertTag(String tag) throws DataAccessException;
-
-    void insertBookTag(int bookId, int tagId) throws DataAccessException;
-
-    void replaceBookTags(Book book, List<String> tagsList) throws DataAccessException, DataAccessException;
+    void replaceBookTags(int bookId, List<String> tagsList) throws DataAccessException;
 
     void updateBookTitle(int bookId, String title) throws DataAccessException;
 }

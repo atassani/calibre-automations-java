@@ -63,8 +63,7 @@ public class CalibreDBJdbc implements CalibreDB {
         }
     }
 
-    @Override
-    public void deleteAllBookTags(int bookId) throws DataAccessException {
+    private void deleteAllBookTags(int bookId) throws DataAccessException {
         // language=SQLite
         String deleteQuery = "DELETE FROM books_tags_link WHERE book = ?";
         PreparedStatement pstmt = null;
@@ -77,8 +76,7 @@ public class CalibreDBJdbc implements CalibreDB {
         }
     }
 
-    @Override
-    public Integer getTagIfExists(String tag) throws DataAccessException {
+    private Integer getTagIfExists(String tag) throws DataAccessException {
         // language=SQLite
         String query = "SELECT id FROM tags WHERE name = ?";
         PreparedStatement pstmt = null;
@@ -93,8 +91,7 @@ public class CalibreDBJdbc implements CalibreDB {
         }
     }
 
-    @Override
-    public Integer insertTag(String tag) throws DataAccessException {
+    private Integer insertTag(String tag) throws DataAccessException {
         // language=SQLite
         String insertQuery = "INSERT INTO tags (name) VALUES (?)";
         PreparedStatement pstmt = null;
@@ -109,8 +106,7 @@ public class CalibreDBJdbc implements CalibreDB {
         }
     }
 
-    @Override
-    public void insertBookTag(int bookId, int tagId) throws DataAccessException {
+    private void insertBookTag(int bookId, int tagId) throws DataAccessException {
         // language=SQLite
         String insertQuery = "INSERT INTO books_tags_link (book, tag) VALUES (?, ?)";
         PreparedStatement pstmt = null;
@@ -125,14 +121,14 @@ public class CalibreDBJdbc implements CalibreDB {
     }
 
     @Override
-    public void replaceBookTags(Book book, List<String> tagsList) throws DataAccessException {
-        deleteAllBookTags(book.getId());
+    public void replaceBookTags(int bookId, List<String> tagsList) throws DataAccessException {
+        deleteAllBookTags(bookId);
         for (String tag: tagsList) {
             Integer tagId = getTagIfExists(tag);
             if (tagId == null) {
                 tagId = insertTag(tag);
             }
-            insertBookTag(book.getId(), tagId);
+            insertBookTag(bookId, tagId);
         }
     }
 

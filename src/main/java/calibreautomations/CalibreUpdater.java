@@ -107,7 +107,6 @@ public class CalibreUpdater {
     }
 
     boolean processAudiobook(boolean dryRun, Book book) throws DataAccessException {
-        // TODO Consider dry-run for Audiobook
         boolean itemUpdated = false;
         if (book.isAudioBookFromTags()) {
             if (!book.getTitle().contains("(audiobook)")) {
@@ -204,7 +203,7 @@ public class CalibreUpdater {
         }
 
         if (!dryRun && !Arrays.stream(originalTags).sorted().toList().equals(tagsList.stream().sorted().toList())) {
-            calibredb.replaceBookTags(book, tagsList);
+            calibredb.replaceBookTags(book.getId(), tagsList);
         }
 
         return itemUpdated;

@@ -7,6 +7,10 @@
         </encoder>
     </appender>
 
+    <logger name="calibreautomations" level="${log.level}" additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
+
     <root level="${log.level}">
         <appender-ref ref="STDOUT" />
     </root>
