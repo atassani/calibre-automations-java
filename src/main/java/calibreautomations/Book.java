@@ -33,4 +33,14 @@ public class Book {
     public boolean isAudioBookFromTags() {
         return tags != null && tags.contains("format:audiobook");
     }
+
+    @Override
+    public String toString() {
+        return "Book{" +
+               "id=" + id +
+               ", title='" + title + '\'' +
+               ", tags='" + tags + '\'' +
+               ", readOrder='" + readOrder + '\'' +
+               '}';
+    }
 }
