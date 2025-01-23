@@ -13,11 +13,13 @@ import java.util.List;
 
 public class CalibreDBcli implements CalibreDB {
 
+    private final String calibreLibraryPath = "/Users/toni.tassani/CalibreLibraryTest";
+
     @Override
     public List<Book> getBooks() throws DataAccessException {
         List<Book> books = new ArrayList<>();
         try {
-            String[] command = {"calibredb", "/Users/toni.tassani/CalibreLibraryTest", "list", "--for-machine", "--fields", "title,tags,*readorder"};
+            String[] command = {"calibredb", calibreLibraryPath, "list", "--for-machine", "--fields", "title,tags,*readorder"};
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             Process process = processBuilder.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
