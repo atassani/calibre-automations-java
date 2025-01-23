@@ -1,15 +1,17 @@
-package calibreautomations;
+package calibreautomations.persistence;
+
+import calibreautomations.Book;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CalibreDB {
+public class CalibreDBJdbc implements CalibreDB {
 
     private final Connection connection;
     private final String readOrderTable;
 
-    public CalibreDB(Connection connection) throws SQLException {
+    public CalibreDBJdbc(Connection connection) throws SQLException {
         this.connection = connection;
         String query = "SELECT id FROM custom_columns WHERE label = 'readorder'";
         try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
@@ -21,7 +23,8 @@ public class CalibreDB {
         }
     }
 
-    List<Book> getBooks() throws SQLException {
+    @Override
+    public List<Book> getBooks() throws SQLException {
         List<Book> books = new ArrayList<>();
         // language=SQLite
         String query = String.format("""
@@ -46,6 +49,7 @@ public class CalibreDB {
         return books;
     }
 
+    @Override
     public void deleteReadOrderCustomField(int bookId) throws SQLException {
         // language=SQLite
         String deleteQuery = String.format("DELETE FROM %s WHERE book = ?", this.readOrderTable);
@@ -55,6 +59,7 @@ public class CalibreDB {
         }
     }
 
+    @Override
     public void deleteAllBookTags(int bookId) throws SQLException {
         // language=SQLite
         String deleteQuery = "DELETE FROM books_tags_link WHERE book = ?";
@@ -63,6 +68,7 @@ public class CalibreDB {
         pstmt.executeUpdate();
     }
 
+    @Override
     public Integer getTagIfExists(String tag) throws SQLException {
         // language=SQLite
         String query = "SELECT id FROM tags WHERE name = ?";
@@ -73,6 +79,7 @@ public class CalibreDB {
         }
     }
 
+    @Override
     public Integer insertTag(String tag) throws SQLException {
         // language=SQLite
         String insertQuery = "INSERT INTO tags (name) VALUES (?)";
@@ -83,6 +90,7 @@ public class CalibreDB {
         return rs.next() ? rs.getInt(1) : null;
     }
 
+    @Override
     public void insertBookTag(int bookId, int tagId) throws SQLException {
         // language=SQLite
         String insertQuery = "INSERT INTO books_tags_link (book, tag) VALUES (?, ?)";
@@ -92,7 +100,8 @@ public class CalibreDB {
         pstmt.executeUpdate();
     }
 
-    void replaceBookTags(Book book, List<String> tagsList) throws SQLException {
+    @Override
+    public void replaceBookTags(Book book, List<String> tagsList) throws SQLException {
         deleteAllBookTags(book.getId());
         for (String tag: tagsList) {
             Integer tagId = getTagIfExists(tag);
@@ -103,6 +112,7 @@ public class CalibreDB {
         }
     }
 
+    @Override
     public void updateBookTitle(int bookId, String title) throws SQLException{
         // language=SQLite
         String updateQuery = "UPDATE books SET title = ? WHERE id = ?";

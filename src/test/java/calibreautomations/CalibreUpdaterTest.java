@@ -1,5 +1,6 @@
 package calibreautomations;
 
+import calibreautomations.persistence.CalibreDBJdbc;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,7 +36,7 @@ class CalibreUpdaterTest {
     @Test
     void test_option_a_processes_Audiobook() throws SQLException {
         Connection mockConnection = mock(Connection.class);
-        CalibreDB mockCalibreDB = mock(CalibreDB.class);
+        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
 
@@ -65,7 +66,7 @@ class CalibreUpdaterTest {
     @Test
     void test_option_r_processes_Readorder() throws SQLException {
         Connection mockConnection = mock(Connection.class);
-        CalibreDB mockCalibreDB = mock(CalibreDB.class);
+        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
 
@@ -96,7 +97,7 @@ class CalibreUpdaterTest {
     @Test
     void test_no_option_processes_audiobook_and_readorder() throws SQLException {
         Connection mockConnection = mock(Connection.class);
-        CalibreDB mockCalibreDB = mock(CalibreDB.class);
+        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
 

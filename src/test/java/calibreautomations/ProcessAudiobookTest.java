@@ -1,5 +1,6 @@
 package calibreautomations;
 
+import calibreautomations.persistence.CalibreDBJdbc;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
@@ -13,7 +14,7 @@ class ProcessAudiobookTest {
     @Test
     void testProcessAudiobook_AddsAudiobookToTitle_with_subtitle() throws SQLException {
         Connection mockConnection = mock(Connection.class);
-        CalibreDB mockCalibreDB = mock(CalibreDB.class);
+        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater updater = new CalibreUpdater(mockConnection, mockCalibreDB);
 
         Book book = new Book(1, "Test Book: the adventure", "tag1,format:audiobook,tag2", "3.0");
@@ -27,7 +28,7 @@ class ProcessAudiobookTest {
     @Test
     void testProcessAudiobook_AddsAudiobookToTitle_without_subtitle() throws SQLException {
         Connection mockConnection = mock(Connection.class);
-        CalibreDB mockCalibreDB = mock(CalibreDB.class);
+        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater updater = new CalibreUpdater(mockConnection, mockCalibreDB);
 
         Book book = new Book(1, "Test Book", "tag1,format:audiobook,tag2", "3.0");
@@ -40,7 +41,7 @@ class ProcessAudiobookTest {
     @Test
     void testProcessAudiobook_RemovesAudiobookFromTitle_with_subtitle() throws SQLException {
         Connection mockConnection = mock(Connection.class);
-        CalibreDB mockCalibreDB = mock(CalibreDB.class);
+        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater updater = new CalibreUpdater(mockConnection, mockCalibreDB);
 
         Book book = new Book(1, "Test Book (audiobook): the adventure", "tag1,tag2", "3.0");
@@ -53,7 +54,7 @@ class ProcessAudiobookTest {
     @Test
     void testProcessAudiobook_RemovesAudiobookFromTitle_without_subtitle() throws SQLException {
         Connection mockConnection = mock(Connection.class);
-        CalibreDB mockCalibreDB = mock(CalibreDB.class);
+        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater updater = new CalibreUpdater(mockConnection, mockCalibreDB);
 
         Book book = new Book(1, "Test Book (audiobook)", "tag1,tag2", "3.0");

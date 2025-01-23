@@ -1,5 +1,6 @@
 package calibreautomations;
 
+import calibreautomations.persistence.CalibreDBJdbc;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -17,7 +18,7 @@ class ProcessReadOrderTest {
     @Test
     void test_more_than_one_readorder_gets_first_if_no_custom_field() throws SQLException {
         Connection mockConnection = mock(Connection.class);
-        CalibreDB mockCalibreDB = mock(CalibreDB.class);
+        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
 
@@ -48,7 +49,7 @@ class ProcessReadOrderTest {
     @Test
     void test_if_no_readorder_tag_and_custom_field_exists_adds_readorder_tag() throws SQLException {
         Connection mockConnection = mock(Connection.class);
-        CalibreDB mockCalibreDB = mock(CalibreDB.class);
+        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
 
@@ -78,7 +79,7 @@ class ProcessReadOrderTest {
     @Test
     void test_if_readorder_custom_field_different_from_tag_custom_field_wins() throws SQLException {
         Connection mockConnection = mock(Connection.class);
-        CalibreDB mockCalibreDB = mock(CalibreDB.class);
+        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
 
@@ -109,7 +110,7 @@ class ProcessReadOrderTest {
     @Test
     void test_if_readorder_custom_field_same_as_tag_no_update() throws SQLException {
         Connection mockConnection = mock(Connection.class);
-        CalibreDB mockCalibreDB = mock(CalibreDB.class);
+        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
 
@@ -134,7 +135,7 @@ class ProcessReadOrderTest {
     @Test
     void test_if_custom_field_is_0_0_removes_tag() throws SQLException {
         Connection mockConnection = mock(Connection.class);
-        CalibreDB mockCalibreDB = mock(CalibreDB.class);
+        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
 
@@ -167,7 +168,7 @@ class ProcessReadOrderTest {
     @Test
     void test_if_readorder_custom_field_is_empty_removes_the_tag() throws SQLException {
         Connection mockConnection = mock(Connection.class);
-        CalibreDB mockCalibreDB = mock(CalibreDB.class);
+        CalibreDBJdbc mockCalibreDB = mock(CalibreDBJdbc.class);
         CalibreUpdater mockUpdater = Mockito.spy(new CalibreUpdater(mockConnection, mockCalibreDB));
         AppOptions mockOptions = mock(AppOptions.class);
 

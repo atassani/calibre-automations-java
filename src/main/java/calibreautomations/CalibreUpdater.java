@@ -1,5 +1,7 @@
 package calibreautomations;
 
+import calibreautomations.persistence.CalibreDB;
+import calibreautomations.persistence.CalibreDBJdbc;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +32,7 @@ public class CalibreUpdater {
     public static void main(String[] args) {
         loadConfiguration();
         try (Connection conn = DriverManager.getConnection(DB_URL)) {
-            CalibreDB calibreDB = new CalibreDB(conn);
+            CalibreDB calibreDB = new CalibreDBJdbc(conn);
             CalibreUpdater calibreUpdater = new CalibreUpdater(conn, calibreDB);
             calibreUpdater.run(args);
         } catch (SQLException e) {
@@ -59,7 +61,6 @@ public class CalibreUpdater {
         try {
             options.parse(args);
         } catch (ParseException e) {
-            logger.error("Error parsing command line options", e);
             System.out.println(e.getMessage());
             System.out.println(options.help());
             return;
@@ -109,14 +110,14 @@ public class CalibreUpdater {
         boolean itemUpdated = false;
         if (book.isAudioBookFromTags()) {
             if (!book.getTitle().contains("(audiobook)")) {
-                System.out.printf("%-30s for \"%s\" to ...%n", "[add audiobook to title]", book.getTitle());
+                String title = book.getTitle();
+                if (title.contains(":")) {
+                    title = title.replaceFirst(":", " (audiobook):");
+                } else {
+                    title = title + " (audiobook)";
+                }
+                System.out.printf("%-30s for \"%s\" to \"%s\"%n", "[add audiobook to title]", book.getTitle(), title);
                 if (!dryRun) {
-                    String title = book.getTitle();
-                    if (title.contains(":")) {
-                        title = title.replaceFirst(":", " (audiobook):");
-                    } else {
-                        title = title + " (audiobook)";
-                    }
                     calibredb.updateBookTitle(book.getId(), title);
                 }
                 itemUpdated = true;
@@ -131,10 +132,10 @@ public class CalibreUpdater {
                     String[] titleParts = title.split(":");
                     title = titleParts[0].trim() + ": " + titleParts[1].trim();
                 }
+                System.out.printf("%-30s for \"%s\" to \"%s\"%n", "[remove audiobook from title]", book.getTitle(), title);
                 if (!dryRun) {
                     calibredb.updateBookTitle(book.getId(), title);
                 }
-                System.out.printf("%-30s for \"%s\" to \"%s\"%n", "[remove audiobook from title]", book.getTitle(), title);
                 itemUpdated = true;
             }
         }
@@ -151,23 +152,23 @@ public class CalibreUpdater {
                 .toList();
         String readOrderFromTags;
         if (!readOrderTags.isEmpty()) {
-            readOrderFromTags = "readorder:" + readOrderTags.get(0);
+            readOrderFromTags = readOrderTags.get(0);
         } else {
             readOrderFromTags = NO_READORDER;
         }
         boolean itemUpdated = false;
         // Case 1: More than one readorder tag, we keep the first one
         if (readOrderTags.size() > 1) {
-            System.out.printf("%-30s for \"%s\" to ...%n", "[remove extra readorder tags]", book.getTitle());
+            System.out.printf("%-30s for \"%s\"%n", "[remove extra readorder tags]", book.getTitle());
             tagsList = tagsList.stream()
                     .filter(tag -> !tag.trim().startsWith("readorder:"))
                     .collect(Collectors.toList());
-            tagsList.add(readOrderFromTags);
+            tagsList.add("readorder:" + readOrderFromTags);
             itemUpdated = true;
         }
         // Case 2: No readorder tag but custom field exists, we add the tag
         if (NO_READORDER.equals(readOrderFromTags) && !NO_READORDER.equals(readOrderFromCustomField)) {
-            System.out.printf("%-30s for \"%s\" to ...%n", "[add readorder tag]", book.getTitle());
+            System.out.printf("%-30s for \"%s\"%n", "[add readorder tag]", book.getTitle());
             tagsList.add("readorder:" + readOrderFromCustomField);
             itemUpdated = true;
         }
@@ -187,7 +188,7 @@ public class CalibreUpdater {
             if (!dryRun) {
                 calibredb.deleteReadOrderCustomField(book.getId());
             }
-            System.out.printf("%-30s for \"%s\" to ...%n", "[delete custom field readorder]", book.getTitle());
+            System.out.printf("%-30s for \"%s\"%n", "[delete custom field readorder]", book.getTitle());
             // Skip further processing of this book
             readOrderFromCustomField = NO_READORDER;
         }
